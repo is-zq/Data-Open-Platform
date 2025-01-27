@@ -39,21 +39,29 @@ bool loadstcode(const string &inifile);
 /* 根据站点参数生成观测数据存到datalist中 */
 void crtsurfdata();
 
+/**
+ * 将datalist中的数据写入到文件中
+ * @param outpath 数据文件存放的目录
+ * @param datafmt 数据文件的格式，csv，xml或json
+ */
+bool crtsurffile(const string &outpath,const string &datafmt);
+
 int main(int argc, char const *argv[])
 {
     //站点参数文件 生成的测试数据存放的目录 本程序运行的日志
-    if(argc != 4)
+    if(argc != 5)
     {
-        cout << "Using: ./crtsurfdata inifile outpath logfile\n";
-        cout << "Examples: /project/idc/bin/crtsurfdata /project/idc/ini/stcode.ini /tmp/idc/surfdata /log/idc/crtsurfdata.log\n\n";
+        cout << "Using: ./crtsurfdata inifile outpath logfile datafmt\n";
+        cout << "Examples: /project/idc/bin/crtsurfdata /project/idc/ini/stcode.ini /tmp/idc/surfdata /log/idc/crtsurfdata.log csv,xml,json\n\n";
 
         cout << "inifile 气象站点参数文件名。\n";
         cout << "outpath 气象站点数据文件存放的目录。\n";
         cout << "logfile 本程序运行的日志文件名。\n"; 
+        cout << "datafmt 输出数据文件的格式，支持csv、xml和json，中间用逗号隔开。\n\n"; 
 
         return -1;
     }
-    const char *arg_inifile = argv[1],*arg_outpath = argv[2],*arg_logfile = argv[3];
+    const char *arg_inifile = argv[1],*arg_outpath = argv[2],*arg_logfile = argv[3],*arg_datafmt = argv[4];
 
     closeioandsignal(true);
     signal(SIGINT,EXIT);signal(SIGTERM,EXIT);
@@ -79,6 +87,9 @@ int main(int argc, char const *argv[])
     crtsurfdata();
 
     // 把站点观测数据保存到文件中
+    if(strstr(arg_datafmt,"csv") != NULL) crtsurffile(arg_outpath,"csv");
+    if(strstr(arg_datafmt,"xml") != NULL) crtsurffile(arg_outpath,"xml");
+    if(strstr(arg_datafmt,"json") != NULL) crtsurffile(arg_outpath,"json");
 
     logfile.write("crtsurfdata 运行结束。\n");
     return 0;
@@ -136,4 +147,60 @@ void crtsurfdata()
         stsurfdata.vis = rand()%5001 + 100000;
         datalist.emplace_back(stsurfdata);
     }
+}
+
+bool crtsurffile(const string &outpath,const string &datafmt)
+{
+    //拼接生成数据的文件名，如：/tmp/idc/surfdata/SURF_ZH_20250127232200_2254.csv
+    string strfilename = outpath+"/"+"SURF_ZH_"+strddatetime+"_"+to_string(getpid())+"."+datafmt;
+
+    cofile ofile;
+    if(ofile.open(strfilename) == false)
+    {
+        logfile.write("ofile.open(%s) failed\n",strfilename.c_str());
+        return false;
+    }
+
+    if(datafmt == "csv") ofile.writeline("站点代码,数据时间,气温,气压,相对湿度,风向,风速,降雨量,能见度\n");
+    else if(datafmt == "xml") ofile.writeline("<data>\n");
+    else if(datafmt == "json") ofile.writeline("{\"data\":[\n");
+    else return false;
+    
+    int cnt = 0;
+    for(auto &data:datalist)
+    {
+        if(datafmt == "csv")
+        {
+            ofile.writeline("%s,%s,%.1f,%.1f,%d,%d,%.1f,%.1f,%.1f\n",
+            data.obtid,data.ddatatime,data.t/10.0,data.p/10.0,data.u,data.wd,data.wf/10.0,data.r/10.0,data.vis/10.0);
+        }
+        else if(datafmt == "xml")
+        {
+            ofile.writeline("<obtid>%s</obtid><ddatetime>%s</ddatetime><t>%.1f</t><p>%.1f</p><u>%d</u>"
+            "<wd>%d</wd><wf>%.1f</wf><r>%.1f</r><vis>%.1f</vis><endl/>\n",
+            data.obtid,data.ddatatime,data.t/10.0,data.p/10.0,data.u,data.wd,data.wf/10.0,data.r/10.0,data.vis/10.0);
+        }
+        else if(datafmt == "json")
+        {
+            ofile.writeline(R"({"obtid":"%s","ddatetime":"%s","t":"%.1f","p":"%.1f","u":"%d","wd":"%d","wf":"%.1f","r":"%.1f","vis":"%.1f"})",
+            data.obtid,data.ddatatime,data.t/10.0,data.p/10.0,data.u,data.wd,data.wf/10.0,data.r/10.0,data.vis/10.0);
+            if(cnt++ < datalist.size()-1)
+                ofile.writeline(",\n");
+            else
+                ofile.writeline("\n");
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    if(datafmt == "xml") ofile.writeline("</data>\n");
+    else if(datafmt == "json") ofile.writeline("]}\n");
+
+    ofile.closeandrename();
+
+    logfile.write("生成数据文件%s成功，数据时间%s，记录数%d.\n",strfilename.c_str(),strddatetime,datalist.size());
+
+    return true;
 }
