@@ -12,11 +12,32 @@ struct st_stcode
     double height;      //单位：米
 };
 
+struct st_surfdata
+{
+    char obtid[11]; //站号
+    char ddatatime[15]; //数据时间，格式：yyyymmddhh24miss，精确到分钟，秒固定填00
+    int t;      //气温，单位：0.1摄氏度
+    int p;      //气压，单位：0.1百帕        
+    int u;      //相对湿度，0-100
+    int wd;     //风向，0-360
+    int wf;     //风速，单位：0.1 m/s
+    int r;      //降雨量，单位：0.1mm
+    int vis;    //能见度，单位：0.1m
+};
+
 clogfile logfile;   //本程序运行的日志
 list<st_stcode> stlist; //存放参数
+list<st_surfdata> datalist; //存放观测数据
+char strddatetime[15];  //获取数据的时间
 
-void EXIT(int sig); //信号2、15的处理函数
-bool loadstcode(const string &inifile); //从参数文件中加载参数到stlist
+/* 信号2、15的处理函数 */
+void EXIT(int sig);
+
+/* 从参数文件中加载参数到stlist */
+bool loadstcode(const string &inifile);
+
+/* 根据站点参数生成观测数据存到datalist中 */
+void crtsurfdata();
 
 int main(int argc, char const *argv[])
 {
@@ -52,6 +73,10 @@ int main(int argc, char const *argv[])
     }
 
     // 根据站点参数，生成站点观测数据；
+    memset(strddatetime,0,sizeof(strddatetime));
+    ltime(strddatetime,"yyyymmddhh24miss"); //获取系统时间
+    strncpy(strddatetime+12,"00",2);    //秒固定为00
+    crtsurfdata();
 
     // 把站点观测数据保存到文件中
 
@@ -91,4 +116,24 @@ bool loadstcode(const string& inifile)
     }
 
     return true;
+}
+
+void crtsurfdata()
+{
+    srand(time(0));
+
+    for(auto &st:stlist)
+    {
+        st_surfdata stsurfdata;
+        strcpy(stsurfdata.obtid,st.obtid);
+        strcpy(stsurfdata.ddatatime,strddatetime);
+        stsurfdata.t = rand()%350;
+        stsurfdata.p = rand()%265 + 10000;
+        stsurfdata.u = rand()%101;
+        stsurfdata.wd = rand()%360;
+        stsurfdata.wf = rand()%150;
+        stsurfdata.r = rand()%16;
+        stsurfdata.vis = rand()%5001 + 100000;
+        datalist.emplace_back(stsurfdata);
+    }
 }
