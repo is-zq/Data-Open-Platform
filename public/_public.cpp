@@ -1792,7 +1792,7 @@ bool csemp::wait(short value)
     return true;
 }
 
-// 信号量的V操作（把信号量的值减value）。
+// 信号量的V操作（把信号量的值加value）。
 bool csemp::post(short value)
 {
     if (m_semid==-1) return false;
