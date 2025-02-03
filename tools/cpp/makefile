@@ -8,7 +8,7 @@ PUBCPP = /project/public/_public.cpp
 CFLAGS = -g
 #CFLAGS = -O2
 
-all:procctl checkproc
+all:procctl checkproc deletefiles gzipfiles
 
 procctl:procctl.cpp
 	g++ $(CFLAGS) -o procctl procctl.cpp
@@ -18,5 +18,13 @@ checkproc:checkproc.cpp
 	g++ $(CFLAGS) -o checkproc checkproc.cpp $(PUBINCL) $(PUBCPP)
 	cp -f checkproc ../bin/
 
+deletefiles:deletefiles.cpp
+	g++ $(CFLAGS) -o deletefiles deletefiles.cpp $(PUBINCL) $(PUBCPP)
+	cp -f deletefiles ../bin/
+
+gzipfiles:gzipfiles.cpp
+	g++ $(CFLAGS) -o gzipfiles gzipfiles.cpp $(PUBINCL) $(PUBCPP)
+	cp -f gzipfiles ../bin/
+
 clean:
-	rm -rf procctl checkproc
+	rm -rf procctl checkproc deletefiles gzipfiles
