@@ -25,6 +25,7 @@ struct st_surfdata
     int vis;    //能见度，单位：0.1m
 };
 
+cpactive pactive;   //进程的心跳
 clogfile logfile;   //本程序运行的日志
 list<st_stcode> stlist; //存放参数
 list<st_surfdata> datalist; //存放观测数据
@@ -52,8 +53,9 @@ int main(int argc, char const *argv[])
     if(argc != 5)
     {
         cout << "Using: ./crtsurfdata inifile outpath logfile datafmt\n";
-        cout << "Examples: /project/idc/bin/crtsurfdata /project/idc/ini/stcode.ini /tmp/idc/surfdata /log/idc/crtsurfdata.log csv,xml,json\n\n";
+        cout << "Examples: /project/tools/bin/procctl 60 /project/idc/bin/crtsurfdata /project/idc/ini/stcode.ini /tmp/idc/surfdata /log/idc/crtsurfdata.log csv,xml,json\n\n";
 
+        cout << "本程序用于生成气象站点观测的数据，每分钟运行一次。\n";
         cout << "inifile 气象站点参数文件名。\n";
         cout << "outpath 气象站点数据文件存放的目录。\n";
         cout << "logfile 本程序运行的日志文件名。\n"; 
@@ -65,6 +67,8 @@ int main(int argc, char const *argv[])
 
     closeioandsignal(true);
     signal(SIGINT,EXIT);signal(SIGTERM,EXIT);
+
+    pactive.addpinfo(10,"crtsurfdata");
 
     if(logfile.open(arg_logfile) == false)
     {
