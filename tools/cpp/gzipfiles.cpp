@@ -29,7 +29,7 @@ int main(int argc,char *argv[])
 
     // 忽略全部的信号和关闭I/O，设置信号处理函数。
     closeioandsignal(true);
-    signal(2,EXIT); signal(15,EXIT);
+    signal(SIGINT,EXIT); signal(SIGTERM,EXIT);
 
     pactive.addpinfo(120,"gzipfiles");       // 把当前进程的心跳加入共享内存。   
 
