@@ -33,7 +33,7 @@ clogfile logfile;   //日志文件
 cftpclient ftp;     //ftp客户端对象
 cpactive pactive;  // 进程心跳的对象
 unordered_map<string,string> ok_files;   //已下载的文件，从okfile文件中加载
-list<st_fileinfo> server_files; //下载之前列出服务端文件名的容器，从nlist文件中加载。
+list<st_fileinfo> filelist; //下载之前列出服务端文件名的容器，从nlist文件中加载。
 list<st_fileinfo> unchanged_files;   //本次未修改不需要下载的文件
 list<st_fileinfo> download_files;    //本次要下载的文件
 
@@ -47,7 +47,7 @@ bool _xmltoarg(char* xmlbuffer);
 bool loadlistfile();
 // 加载okfile中的数据到容器ok_files中。
 void loadokfile();
-// 比较server_files和ok_files，得到unchanged_files和download_files.
+// 比较filelist和ok_files，得到unchanged_files和download_files.
 void compmap();
 // 把容器unchanged_files中的数据写入okfile，覆盖之前的旧okfile.
 bool writetookfile();
@@ -66,7 +66,7 @@ int main(int argc,char *argv[])
     char *logfilename = argv[1],*xmlbuffer = argv[2];
 
     // 忽略全部的信号和关闭I/O，设置信号处理函数。
-    //closeioandsignal(true);
+    closeioandsignal(true);
     signal(SIGINT,EXIT); signal(SIGTERM,EXIT);
 
     //打开日志文件
@@ -108,7 +108,7 @@ int main(int argc,char *argv[])
 
     pactive.uptatime();   // 更新进程的心跳
 
-    //加载nlist文件并将文件名保存到容器server_files中
+    //加载nlist文件并将文件名保存到容器filelist中
     if (loadlistfile() == false)
     {
         logfile.write("loadlistfile() failed.\n");
@@ -123,12 +123,12 @@ int main(int argc,char *argv[])
             return -1;
     }
     else
-        server_files.swap(download_files);   // 为了统一文件下载的代码，把二者交换。
+        filelist.swap(download_files);   // 为了统一文件下载的代码，把二者交换。
 
     pactive.uptatime();   // 更新进程的心跳
 
     string strremotefilename,strlocalfilename;
-    //遍历server_files下载文件
+    //遍历filelist下载文件
     for(auto &fileinfo:download_files)
     {
         sformat(strremotefilename,"%s/%s",starg.remotepath,fileinfo.filename.c_str());         // 拼接服务端全路径的文件名。
@@ -138,7 +138,8 @@ int main(int argc,char *argv[])
         // 调用ftpclient.get()方法下载文件。
         if (ftp.get(strremotefilename,strlocalfilename,starg.checkmtime)==false) 
         {
-            logfile << "failed.\n" << ftp.response() << "\n"; return -1;
+            logfile << "failed.\n" << ftp.response() << "\n";
+            return -1;
         }
 
         logfile << "ok.\n"; 
@@ -289,7 +290,7 @@ bool _xmltoarg(char* xmlbuffer)
 
 bool loadlistfile()
 {
-    server_files.clear();
+    filelist.clear();
     cifile ifile;
     if (ifile.open(sformat("/tmp/nlist/ftpgetfiles_%d.nlist",getpid()))==false)
     {
@@ -314,13 +315,13 @@ bool loadlistfile()
             }
         }
 
-        server_files.emplace_back(strfilename,ftp.m_mtime);
+        filelist.emplace_back(strfilename,ftp.m_mtime);
     }
 
     ifile.closeandremove();
 
     //调试用
-    // for (auto &fileinfo:server_files)
+    // for (auto &fileinfo:filelist)
     //    logfile.write("filename=%s,mtime=%s\n",fileinfo.filename.c_str(),fileinfo.mtime.c_str());
 
     return true;
@@ -357,7 +358,7 @@ void compmap()
     unchanged_files.clear(); 
     download_files.clear();
 
-    for (auto &fileinfo:server_files)
+    for (auto &fileinfo:filelist)
     {
         auto it=ok_files.find(fileinfo.filename);           // 在容器一中用文件名查找。
         if (it != ok_files.end())
