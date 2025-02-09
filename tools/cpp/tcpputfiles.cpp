@@ -81,7 +81,7 @@ int main(int argc,char *argv[])
         EXIT(-1);
     }
 
-    bool bcontinue=true;   // 如果调用_tcpputfiles()发送了文件，bcontinue为true，否则为false。
+    bool bcontinue=false;   // 如果调用_tcpputfiles()发送了文件，bcontinue为true，否则为false。
 
     while (true)
     {
@@ -114,7 +114,7 @@ bool activetest()
     //  xxxxxxxxxx  logfile.write("发送：%s\n",strsendbuffer.c_str());
     if (tcpclient.write(strsendbuffer)==false) return false; // 向服务端发送请求报文。
 
-    if (tcpclient.read(strrecvbuffer,10)==false) return false; // 接收服false务端的回应报文。
+    if (tcpclient.read(strrecvbuffer,10)==false) return false; // 接收服务端的回应报文。
     //  xxxxxxxxxx  logfile.write("接收：%s\n",strrecvbuffer.c_str());
 
     return true;
@@ -266,6 +266,7 @@ bool _tcpputfiles(bool &bcontinue)
             // xxxxxxxxxx logfile.write("strrecvbuffer=%s\n",strrecvbuffer.c_str());
 
             // 处理服务端的确认报文（删除本地文件或把本地文件移动到备份目录）。
+            --delayed;
             ackmessage(strrecvbuffer);
         }
     }
