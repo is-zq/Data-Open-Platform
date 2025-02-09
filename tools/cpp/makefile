@@ -8,7 +8,7 @@ PUBCPP = /project/public/_public.cpp
 CFLAGS = -g
 #CFLAGS = -O2
 
-all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles
+all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpputfiles
 
 procctl:procctl.cpp
 	g++ $(CFLAGS) -o procctl procctl.cpp
@@ -34,5 +34,17 @@ ftpputfiles:ftpputfiles.cpp
 	g++ $(CFLAGS) -o ftpputfiles ftpputfiles.cpp $(PUBINCL) $(PUBCPP) /project/public/libftp.a /project/public/_ftp.cpp
 	cp -f ftpputfiles ../bin/
 
+fileserver:fileserver.cpp
+	g++ $(CFLAGS) -o fileserver fileserver.cpp $(PUBINCL) $(PUBCPP)
+	cp -f fileserver ../bin/
+
+# tcpgetfiles:tcpgetfiles.cpp
+# 	g++ $(CFLAGS) -o tcpgetfiles tcpgetfiles.cpp $(PUBINCL) $(PUBCPP)
+# 	cp -f tcpgetfiles ../bin/
+
+tcpputfiles:tcpputfiles.cpp
+	g++ $(CFLAGS) -o tcpputfiles tcpputfiles.cpp $(PUBINCL) $(PUBCPP)
+	cp -f tcpputfiles ../bin/
+
 clean:
-	rm -rf procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles
+	rm -rf procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpputfiles

@@ -175,7 +175,7 @@ void _help()
     printf("Using:/project/tools/bin/ftpputfiles logfilename xmlbuffer\n\n");
 
     printf("Sample:/project/tools/bin/procctl 30 /project/tools/bin/ftpputfiles /log/idc/ftpputfiles_surfdata.log "\
-              "\"<host>127.0.0.1:21</host><mode>1</mode><username>wucz</username><password>oracle</password>"\
+              "\"<host>127.0.0.1:21</host><mode>1</mode><username>mysql</username><password>zqMYSQL20030313</password>"\
               "<localpath>/tmp/idc/surfdata</localpath><remotepath>/idcdata/surfdata</remotepath>"\
               "<matchname>SURF_ZH*.JSON</matchname>"\
               "<ptype>1</ptype><localpathbak>/tmp/idc/surfdatabak</localpathbak>"\
@@ -187,8 +187,8 @@ void _help()
     printf("xmlbuffer为文件上传的参数，如下：\n");
     printf("<host>127.0.0.1:21</host> 远程服务端的IP和端口。\n");
     printf("<mode>1</mode> 传输模式，1-被动模式，2-主动模式，缺省采用被动模式。\n");
-    printf("<username>wucz</username> 远程服务端ftp的用户名。\n");
-    printf("<password>wuczpwd</password> 远程服务端ftp的密码。\n");
+    printf("<username>mysql</username> 远程服务端ftp的用户名。\n");
+    printf("<password>zqMYSQL20030313</password> 远程服务端ftp的密码。\n");
     printf("<remotepath>/tmp/ftpputest</remotepath> 远程服务端存放文件的目录。\n");
     printf("<localpath>/tmp/idc/surfdata</localpath> 本地文件存放的目录。\n");
     printf("<matchname>SURF_ZH*.JSON</matchname> 待上传文件匹配的规则。"\
