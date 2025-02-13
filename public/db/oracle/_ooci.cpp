@@ -153,14 +153,14 @@ void connection::setdbopt(const char *connstr)
 
     // tnsname
     pos = strstr(strtemp,"@");
-    if (pos > 0) 
+    if (pos > (char*)0) 
     {
         strncpy(m_env.tnsname,pos+1,50); pos[0]=0;
     }
 
     // password
     pos = strstr(strtemp,"/");
-    if (pos > 0) 
+    if (pos > (char*)0) 
     {
         strncpy(m_env.pass,pos+1,30); pos[0]=0;
     }
