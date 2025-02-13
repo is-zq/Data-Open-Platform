@@ -21,7 +21,7 @@ ORACPP = /project/public/db/oracle/_ooci.cpp
 # 调试参数
 CFLAGS = -g
 
-all:crtsurfdata obtcodetodb
+all:crtsurfdata obtcodetodb obtmindtodb
 
 crtsurfdata:crtsurfdata.cpp
 	g++ $(CFLAGS) -o crtsurfdata crtsurfdata.cpp $(PUBINCL) $(PUBCPP) -Im -Ic
@@ -31,5 +31,9 @@ obtcodetodb:obtcodetodb.cpp
 	g++ $(CFLAGS) -o obtcodetodb obtcodetodb.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL) $(ORALIB) $(ORALIBS) $(ORACPP) 
 	cp obtcodetodb ../bin/.
 
+obtmindtodb:obtmindtodb.cpp idcapp.cpp
+	g++ $(CFLAGS) -o obtmindtodb obtmindtodb.cpp idcapp.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL) $(ORALIB) $(ORALIBS) $(ORACPP)
+	cp obtmindtodb ../bin/.
+
 clean:
-	rm -f crtsurfdata obtcodetodb
+	rm -f crtsurfdata obtcodetodb  obtmindtodb

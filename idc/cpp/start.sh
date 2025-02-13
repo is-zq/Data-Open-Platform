@@ -36,3 +36,12 @@
 
 # 清理/tmp/tcpgetest目录中的历史数据文件。
 /project/tools/bin/procctl 300 /project/tools/bin/deletefiles /tmp/tcpgetest "*" 0.02
+
+# 把站点参数数据入库到T_ZHOBTCODE表中，如果站点不存在则插入，站点已存在则更新。
+/project/tools/bin/procctl 120 /project/idc/bin/obtcodetodb /project/idc/ini/stcode.ini "idc/idcpwd@snorcl11g_124" "Simplified Chinese_China.AL32UTF8" /log/idc/obtcodetodb.log
+
+# 把/idcdata/surfdata目录中的气象观测数据文件入库到T_ZHOBTMIND表中。
+/project/tools/bin/procctl 10 /project/idc/bin/obtmindtodb /idcdata/surfdata "idc/idcpwd@snorcl11g_124" "Simplified Chinese_China.AL32UTF8" /log/idc/obtmindtodb.log
+
+# 执行/project/idc/sql/deletetable.sql脚本，删除T_ZHOBTMIND表两小时之前的数据，如果启用了数据清理程序deletetable，就不必启用这行脚本了。
+/project/tools/bin/procctl 120 /oracle/home/bin/sqlplus idc/idcpwd@snorcl11g_128 @/project/idc/sql/deletetable.sql
