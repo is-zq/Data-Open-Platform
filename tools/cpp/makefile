@@ -4,11 +4,26 @@ PUBINCL = -I/project/public
 # 开发框架源文件，这里直接包含cpp而不用链接库是为了方便调试
 PUBCPP = /project/public/_public.cpp
 
+##################################################
+# oracle头文件路径
+ORAINCL = -I$(ORACLE_HOME)/rdbms/public -I/project/public/db/oracle
+
+# oracle库文件路径
+ORALIB =  -L$(ORACLE_HOME)/lib -L.
+
+# oracle的oci库
+ORALIBS = -lclntsh
+
+# 开发框架oracle的cpp文件名，这里直接包含进来，没有采用链接库，是为了方便调试。
+ORACPP = /project/public/db/oracle/_ooci.cpp
+##################################################
+
 # 调试参数
 CFLAGS = -g
 #CFLAGS = -O2
 
-all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles
+all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles\
+	dminingoracle
 
 procctl:procctl.cpp
 	g++ $(CFLAGS) -o procctl procctl.cpp
@@ -46,5 +61,10 @@ tcpputfiles:tcpputfiles.cpp
 	g++ $(CFLAGS) -o tcpputfiles tcpputfiles.cpp $(PUBINCL) $(PUBCPP)
 	cp -f tcpputfiles ../bin/
 
+dminingoracle:dminingoracle.cpp
+	g++ $(CFLAGS) -o dminingoracle dminingoracle.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP)
+	cp -f dminingoracle ../bin/.
+
 clean:
 	rm -rf procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles
+	rm -rf dminingoracle
