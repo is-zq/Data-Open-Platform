@@ -45,7 +45,7 @@
 /project/tools/bin/procctl 10 /project/idc/bin/obtmindtodb /idcdata/surfdata "idc/idcpwd@snorcl11g_124" "Simplified Chinese_China.AL32UTF8" /log/idc/obtmindtodb.log
 
 # 执行/project/idc/sql/deletetable.sql脚本，定期清理数据表，如果启用了数据清理程序deletetable，就不必启用这行脚本了。
-/project/tools/bin/procctl 120 /oracle/home/bin/sqlplus idc/idcpwd@snorcl11g_124 @/project/idc/sql/deletetable.sql
+# /project/tools/bin/procctl 120 /oracle/home/bin/sqlplus idc/idcpwd@snorcl11g_124 @/project/idc/sql/deletetable.sql
 
 # 每隔1小时把T_ZHOBTCODE表中全部的数据抽取出来。
 /project/tools/bin/procctl 3600 /project/tools/bin/dminingoracle /log/idc/dminingoracle_ZHOBTCODE.log "<connstr>idc/idcpwd@snorcl11g_124</connstr><charset>Simplified Chinese_China.AL32UTF8</charset><selectsql>select obtid,cityname,provname,lat,lon,height from T_ZHOBTCODE</selectsql><fieldstr>obtid,cityname,provname,lat,lon,height</fieldstr><fieldlen>10,30,30,10,10,10</fieldlen><bfilename>ZHOBTCODE</bfilename><efilename>toidc</efilename><outpath>/idcdata/dmindata</outpath><timeout>30</timeout><pname>dminingoracle_ZHOBTCODE</pname>"
@@ -65,3 +65,9 @@
 # 清理/idcdata/xmltodb/vipbak和/idcdata/xmltodb/viperr目录中文件。
 /project/tools/bin/procctl 300 /project/tools/bin/deletefiles /idcdata/xmltodb/vipbak "*" 0.02
 /project/tools/bin/procctl 300 /project/tools/bin/deletefiles /idcdata/xmltodb/viperr  "*" 0.02
+
+# 清理T_ZHOBTMIND表中1天之前的数据。
+/project/tools/bin/procctl 3600 /project/tools/bin/deletetable /log/idc/deletetable_ZHOBTMIND.log "<connstr>idc/idcpwd@snorcl11g_124</connstr><tname>T_ZHOBTMIND</tname><keycol>rowid</keycol><where>where ddatetime<sysdate-1</where><maxcount>100</maxcount><timeout>120</timeout><pname>deletetable_ZHOBTMIND</pname>"
+
+# 把T_ZHOBTMIND1表中0.5天之前的数据迁移到T_ZHOBTMIND1_HIS表
+/project/tools/bin/procctl 3600 /project/tools/bin/migratetable /log/idc/migratetable_ZHOBTMIND1.log "<connstr>idc/idcpwd@snorcl11g_124</connstr><tname>T_ZHOBTMIND1</tname><totname>T_ZHOBTMIND1_HIS</totname><keycol>rowid</keycol><where>where ddatetime<sysdate-0.5</where><maxcount>100</maxcount></starttime><timeout>120</timeout><pname>migratetable_ZHOBTMIND1</pname>"
