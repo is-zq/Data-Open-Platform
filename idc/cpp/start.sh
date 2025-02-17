@@ -71,3 +71,6 @@
 
 # 把T_ZHOBTMIND1表中0.5天之前的数据迁移到T_ZHOBTMIND1_HIS表
 /project/tools/bin/procctl 3600 /project/tools/bin/migratetable /log/idc/migratetable_ZHOBTMIND1.log "<connstr>idc/idcpwd@snorcl11g_124</connstr><tname>T_ZHOBTMIND1</tname><totname>T_ZHOBTMIND1_HIS</totname><keycol>rowid</keycol><where>where ddatetime<sysdate-0.5</where><maxcount>100</maxcount></starttime><timeout>120</timeout><pname>migratetable_ZHOBTMIND1</pname>"
+
+# 清理T_ZHOBTMIND1_HIS表中1天之前的数据。
+/project/tools/bin/procctl 3600 /project/tools/bin/deletetable /log/idc/deletetable_ZHOBTMIND1_HIS.log "<connstr>idc/idcpwd@snorcl11g_124</connstr><tname>T_ZHOBTMIND1_HIS</tname><keycol>rowid</keycol><where>where ddatetime<sysdate-1</where><maxcount>100</maxcount><timeout>120</timeout><pname>deletetable_ZHOBTMIND1_HIS</pname>"

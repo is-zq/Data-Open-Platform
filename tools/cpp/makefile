@@ -23,7 +23,7 @@ CFLAGS = -g
 #CFLAGS = -O2
 
 all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles\
-	dminingoracle xmltodb deletetable migratetable
+	dminingoracle xmltodb deletetable migratetable syncref syncinc
 
 procctl:procctl.cpp
 	g++ $(CFLAGS) -o procctl procctl.cpp
@@ -77,6 +77,14 @@ migratetable:migratetable.cpp _tools.cpp
 	g++ $(CFLAGS) -o migratetable migratetable.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
 	cp -f migratetable ../bin/.
 
+syncref:syncref.cpp _tools.cpp
+	g++ $(CFLAGS) -o syncref syncref.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
+	cp -f syncref ../bin/.
+
+syncinc:syncinc.cpp _tools.cpp
+	g++ $(CFLAGS) -o syncinc syncinc.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
+	cp -f syncinc ../bin/.
+
 clean:
 	rm -rf procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles
-	rm -rf dminingoracle xmltodb deletetable migratetable
+	rm -rf dminingoracle xmltodb deletetable migratetable syncref syncinc
