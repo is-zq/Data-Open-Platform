@@ -23,7 +23,7 @@ CFLAGS = -g
 #CFLAGS = -O2
 
 all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles\
-	dminingoracle xmltodb deletetable migratetable syncref syncinc inetd rinetd rinetdin
+	dminingoracle xmltodb deletetable migratetable syncref syncinc inetd rinetd rinetdin webserver
 
 procctl:procctl.cpp
 	g++ $(CFLAGS) -o procctl procctl.cpp
@@ -97,6 +97,10 @@ rinetdin:rinetdin.cpp
 	g++ $(CFLAGS) -o rinetdin rinetdin.cpp $(PUBINCL) $(PUBCPP) 
 	cp -f rinetdin ../bin/.
 
+webserver:webserver.cpp
+	g++ $(CFLAGS) -o webserver webserver.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) -lpthread
+	cp -f webserver ../bin/.
+
 clean:
 	rm -rf procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles
-	rm -rf dminingoracle xmltodb deletetable migratetable syncref syncinc inetd rinetd rinetdin
+	rm -rf dminingoracle xmltodb deletetable migratetable syncref syncinc inetd rinetd rinetdin webserver
