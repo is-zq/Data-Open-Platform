@@ -19,87 +19,87 @@ ORACPP = /project/public/db/oracle/_ooci.cpp
 ##################################################
 
 # 调试参数
-CFLAGS = -g
-#CFLAGS = -O2
+#CFLAGS = -g
+CFLAGS = -O2
 
 all:procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles\
 	dminingoracle xmltodb deletetable migratetable syncref syncinc inetd rinetd rinetdin webserver
 
 procctl:procctl.cpp
 	g++ $(CFLAGS) -o procctl procctl.cpp
-	cp -f procctl ../bin/
+	mv -f procctl ../bin/
 
 checkproc:checkproc.cpp
 	g++ $(CFLAGS) -o checkproc checkproc.cpp $(PUBINCL) $(PUBCPP)
-	cp -f checkproc ../bin/
+	mv -f checkproc ../bin/
 
 deletefiles:deletefiles.cpp
 	g++ $(CFLAGS) -o deletefiles deletefiles.cpp $(PUBINCL) $(PUBCPP)
-	cp -f deletefiles ../bin/
+	mv -f deletefiles ../bin/
 
 gzipfiles:gzipfiles.cpp
 	g++ $(CFLAGS) -o gzipfiles gzipfiles.cpp $(PUBINCL) $(PUBCPP)
-	cp -f gzipfiles ../bin/
+	mv -f gzipfiles ../bin/
 
 ftpgetfiles:ftpgetfiles.cpp
 	g++ $(CFLAGS) -o ftpgetfiles ftpgetfiles.cpp $(PUBINCL) $(PUBCPP) /project/public/libftp.a /project/public/_ftp.cpp
-	cp -f ftpgetfiles ../bin/
+	mv -f ftpgetfiles ../bin/
 
 ftpputfiles:ftpputfiles.cpp
 	g++ $(CFLAGS) -o ftpputfiles ftpputfiles.cpp $(PUBINCL) $(PUBCPP) /project/public/libftp.a /project/public/_ftp.cpp
-	cp -f ftpputfiles ../bin/
+	mv -f ftpputfiles ../bin/
 
 fileserver:fileserver.cpp
 	g++ $(CFLAGS) -o fileserver fileserver.cpp $(PUBINCL) $(PUBCPP)
-	cp -f fileserver ../bin/
+	mv -f fileserver ../bin/
 
 tcpgetfiles:tcpgetfiles.cpp
 	g++ $(CFLAGS) -o tcpgetfiles tcpgetfiles.cpp $(PUBINCL) $(PUBCPP)
-	cp -f tcpgetfiles ../bin/
+	mv -f tcpgetfiles ../bin/
 
 tcpputfiles:tcpputfiles.cpp
 	g++ $(CFLAGS) -o tcpputfiles tcpputfiles.cpp $(PUBINCL) $(PUBCPP)
-	cp -f tcpputfiles ../bin/
+	mv -f tcpputfiles ../bin/
 
 dminingoracle:dminingoracle.cpp
 	g++ $(CFLAGS) -o dminingoracle dminingoracle.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP)
-	cp -f dminingoracle ../bin/.
+	mv -f dminingoracle ../bin/.
 
 xmltodb:xmltodb.cpp _tools.cpp
 	g++ $(CFLAGS) -o xmltodb xmltodb.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
-	cp -f xmltodb ../bin/.
+	mv -f xmltodb ../bin/.
 
 deletetable:deletetable.cpp
 	g++ $(CFLAGS) -o deletetable deletetable.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP)
-	cp -f deletetable ../bin/.
+	mv -f deletetable ../bin/.
 
 migratetable:migratetable.cpp _tools.cpp
 	g++ $(CFLAGS) -o migratetable migratetable.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
-	cp -f migratetable ../bin/.
+	mv -f migratetable ../bin/.
 
 syncref:syncref.cpp _tools.cpp
 	g++ $(CFLAGS) -o syncref syncref.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
-	cp -f syncref ../bin/.
+	mv -f syncref ../bin/.
 
 syncinc:syncinc.cpp _tools.cpp
 	g++ $(CFLAGS) -o syncinc syncinc.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) _tools.cpp
-	cp -f syncinc ../bin/.
+	mv -f syncinc ../bin/.
 
 inetd:inetd.cpp
 	g++ $(CFLAGS) -o inetd inetd.cpp $(PUBINCL) $(PUBCPP) 
-	cp -f inetd ../bin/.
+	mv -f inetd ../bin/.
 
 rinetd:rinetd.cpp
 	g++ $(CFLAGS) -o rinetd rinetd.cpp $(PUBINCL) $(PUBCPP) 
-	cp -f rinetd ../bin/.
+	mv -f rinetd ../bin/.
 
 rinetdin:rinetdin.cpp
 	g++ $(CFLAGS) -o rinetdin rinetdin.cpp $(PUBINCL) $(PUBCPP) 
-	cp -f rinetdin ../bin/.
+	mv -f rinetdin ../bin/.
 
 webserver:webserver.cpp
 	g++ $(CFLAGS) -o webserver webserver.cpp $(PUBINCL) $(PUBCPP) $(ORAINCL)  $(ORALIB) $(ORALIBS) $(ORACPP) -lpthread
-	cp -f webserver ../bin/.
+	mv -f webserver ../bin/.
 
 clean:
 	rm -rf procctl checkproc deletefiles gzipfiles ftpgetfiles ftpputfiles fileserver tcpgetfiles tcpputfiles
