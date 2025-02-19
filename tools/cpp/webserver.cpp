@@ -1,3 +1,4 @@
+//Web服务器：数据访问接口的http服务端。
 #include "_public.h"
 #include "_ooci.h"
 using namespace idc;

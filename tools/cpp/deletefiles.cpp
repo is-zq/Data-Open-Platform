@@ -1,3 +1,4 @@
+//文件删除程序：删除目录中的文件。
 #include "_public.h"
 using namespace idc;
 

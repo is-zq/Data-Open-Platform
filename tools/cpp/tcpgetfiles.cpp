@@ -1,3 +1,4 @@
+//TCP文件下载程序：自定义TCP文件下载。
 #include "_public.h"
 using namespace idc;
 

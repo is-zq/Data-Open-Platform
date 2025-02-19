@@ -1,3 +1,4 @@
+//调度程序：定期调度程序或脚本。
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

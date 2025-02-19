@@ -1,3 +1,4 @@
+//表清理程序：清理表中满足条件的数据。
 #include "_public.h"
 #include "_ooci.h"
 using namespace idc;

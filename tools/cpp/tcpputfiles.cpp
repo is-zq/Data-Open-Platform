@@ -1,3 +1,4 @@
+//TCP文件上传程序：自定义TCP文件上传。
 #include "_public.h"
 using namespace idc;
 

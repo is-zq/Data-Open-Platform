@@ -1,3 +1,4 @@
+//FTP文件下载程序：使用FTP协议下载文件。
 #include "_public.h"
 #include "_ftp.h"
 using namespace idc;

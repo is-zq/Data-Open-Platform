@@ -1,3 +1,4 @@
+//数据表迁移程序：迁移表中的数据到另一个表。
 #include "_tools.h"
 using namespace idc;
 

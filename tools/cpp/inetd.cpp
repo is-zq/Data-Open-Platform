@@ -1,3 +1,4 @@
+//正向代理程序：根据路由配置表进行正向代理。
 #include "_public.h"
 using namespace idc;
 

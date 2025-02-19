@@ -1,3 +1,4 @@
+//数据抽取程序：抽取源数据库中的数据生成xml文件。
 #include "_public.h"
 #include "_ooci.h"
 using namespace idc;

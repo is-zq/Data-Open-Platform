@@ -1,3 +1,4 @@
+//数据入库程序：将xml文件中的数据存入数据库。
 #include "_tools.h"
 using namespace idc;
 
