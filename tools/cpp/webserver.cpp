@@ -44,6 +44,7 @@ private:
     int m_sendpipe[2] = {0};                                        // 工作线程通知发送线程的无名管道。
 
     unordered_map<int,struct st_client> clientmap;                  // 存放客户端对象的哈希表，即状态机。
+    mutex m_mutex_clientmap;                                        // 用于保护clientmap的互斥锁
 
     atomic_bool m_exit;                                             // 如果m_exit==true，工作线程和发送线程将退出。
 
@@ -141,9 +142,14 @@ public:
                         // 如果连接已断开。
                         logfile.write("接收线程：client(%d) disconnected。\n",evs[i].data.fd);
 
-                        close(evs[i].data.fd);                      // 关闭客户端的连接。
+                        // 关闭客户端的连接。
+                        close(evs[i].data.fd);                      
 
-                        clientmap.erase(evs[i].data.fd);     // 从状态机中删除客户端。
+                        // 从状态机中删除客户端。
+                        {
+                            lock_guard<mutex> lock(m_mutex_clientmap);
+                            clientmap.erase(evs[i].data.fd);
+                        }
 
                         continue;
                     }
@@ -313,8 +319,8 @@ public:
             return;
         }
 
-        // http://192.168.182.124:8080?username=ty&passwd=typwd&intername=getzhobtmind3&
-        // obtid=59287&begintime=20211024094318&endtime=20211024113920
+        // http://192.168.182.124:8080?username=wucz&passwd=wuczpwd&intername=getzhobtmind3&
+        // obtid=59287&begintime=20241024094318&endtime=20251024113920
         // SQL语句：   select obtid,to_char(ddatetime,'yyyymmddhh24miss'),t,p,u,wd,wf,r,vis from T_ZHOBTMIND 
         //                     where obtid=:1 and ddatetime>=to_date(:2,'yyyymmddhh24miss') and ddatetime<=to_date(:3,'yyyymmddhh24miss')
         // colstr字段： obtid,ddatetime,t,p,u,wd,wf,r,vis
@@ -478,19 +484,46 @@ public:
                  // 判断客户端的socket是否有写事件（发送缓冲区没有满）。
                 if (evs[i].events & EPOLLOUT)
                 {
+                    int sock = evs[i].data.fd;
+
+                    // 检查clientmap中是否存在该socket
+                    {
+                        lock_guard<mutex> lock(m_mutex_clientmap);
+                        if (clientmap.find(sock) == clientmap.end())
+                        {
+                            // socket已被关闭，移除关注并继续
+                            ev.data.fd = sock;
+                            epoll_ctl(epollfd,EPOLL_CTL_DEL,ev.data.fd,&ev);
+                            continue;
+                        }
+                    }
+
                     // 把响应报文发送给客户端。
-                    int writen=send(evs[i].data.fd,clientmap[evs[i].data.fd].sendbuffer.data(),clientmap[evs[i].data.fd].sendbuffer.length(),0);
+                    int writen=send(evs[i].data.fd,clientmap[sock].sendbuffer.data(),clientmap[sock].sendbuffer.length(),0);
+
+                    if (writen <= 0)
+                    {
+                        // 发送失败，关闭并清理
+                        close(sock);
+                        {
+                            lock_guard<mutex> lock(m_mutex_clientmap);
+                            clientmap.erase(sock);
+                        }
+                        continue;
+                    }
 
                     logfile.write("发送线程：向%d发送了%d字节。\n",evs[i].data.fd,writen);
 
-                    // 删除socket缓冲区中已成功发送的数据。
-                    clientmap[evs[i].data.fd].sendbuffer.erase(0,writen);
 
-                    // 如果socket缓冲区中没有数据了，不再关心socket的写件事。
-                    if (clientmap[evs[i].data.fd].sendbuffer.length()==0)
+                    // 更新发送缓冲区
                     {
-                        ev.data.fd=evs[i].data.fd;
-                        epoll_ctl(epollfd,EPOLL_CTL_DEL,ev.data.fd,&ev);
+                        lock_guard<mutex> lock(m_mutex_clientmap);
+                        clientmap[sock].sendbuffer.erase(0, writen);
+                        if (clientmap[sock].sendbuffer.empty())
+                        {
+                            ev.data.fd = sock;
+                            epoll_ctl(epollfd,EPOLL_CTL_DEL,ev.data.fd,&ev);
+                        }
                     }
                 }
                 ////////////////////////////////////////////////////////
@@ -505,11 +538,12 @@ int main(int argc,char *argv[])
     {
         printf("\n");
         printf("Using :./webserver logfile port\n\n");
-        printf("Sample:./webserver /log/idc/webserver.log 5088\n\n");
-        printf("        /project/tools/bin/procctl 5 /project/tools/bin/webserver /log/idc/webserver.log 5088\n\n");
+        printf("Sample:./webserver /log/idc/webserver.log 8080\n\n");
+        printf("        /project/tools/bin/procctl 5 /project/tools/bin/webserver /log/idc/webserver.log 8080\n\n");
         printf("基于HTTP协议的数据访问接口模块。\n");
         printf("logfile 本程序运行的日是志文件。\n");
         printf("port    服务端口，例如：80、8080。\n");
+        printf("访问示例：http://192.168.182.124:8080?username=wucz&passwd=wuczpwd&intername=getzhobtmind3&obtid=59287&begintime=20241024094318&endtime=20251024113920\n");
 
         return -1;
     }
@@ -530,7 +564,7 @@ int main(int argc,char *argv[])
     // 创建工作线程
     for(int i=0;i<THREAD_CNT;i++)
     {
-        wthreads_pool.emplace_back(&WebServer::workfunc, &webserver,1);
+        wthreads_pool.emplace_back(&WebServer::workfunc, &webserver,i);
     }
 
     thread st(&WebServer::sendfunc, &webserver);                        // 创建发送线程。
