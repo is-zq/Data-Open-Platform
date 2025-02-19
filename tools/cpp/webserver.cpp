@@ -13,7 +13,8 @@ struct st_client
 };
 
 clogfile logfile;               // 本程序运行的日志。
-vector<thread> wthreads_pool;     //工作线程池
+cpactive pactive;               // 进程心跳。
+vector<thread> wthreads_pool;   // 工作线程池
 
 // 接收/发送队列的结构体。
 struct st_recvmesg
@@ -82,6 +83,19 @@ public:
         ev.events = EPOLLIN;
         epoll_ctl(epollfd,EPOLL_CTL_ADD,ev.data.fd,&ev); 
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //把定时器加入epoll。
+        int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK|TFD_CLOEXEC);   // 创建timerfd。
+        struct itimerspec timeout;                                // 定时时间的数据结构。
+        memset(&timeout,0,sizeof(struct itimerspec));
+        timeout.it_value.tv_sec = 30;                            // 定时时间为30秒。
+        timeout.it_value.tv_nsec = 0;
+        timerfd_settime(tfd,0,&timeout,0);                  // 开始计时。alarm(30)
+        ev.data.fd=tfd;                                                  // 为定时器准备事件。
+        ev.events=EPOLLIN;
+        epoll_ctl(epollfd,EPOLL_CTL_ADD,tfd,&ev);     // 把定时器fd加入epoll。
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         struct epoll_event evs[10];      // 存放epoll返回的事件。
 
         while (true)     // 事件循环。
@@ -95,6 +109,16 @@ public:
             for (int i=0;i<infds;i++)
             {
                 logfile.write("接收线程：已发生事件的fd=%d(%d)\n",evs[i].data.fd,evs[i].events);
+
+                ////////////////////////////////////////////////////////
+                // 如果定时器的时间已到，更新进程的心跳；
+                if (evs[i].data.fd==tfd)
+                {
+                    timerfd_settime(tfd,0,&timeout,0);       // 重新开始计时。
+                    pactive.uptatime();        // 更新进程心跳。
+                    continue;
+                }
+                ////////////////////////////////////////////////////////
 
                 ////////////////////////////////////////////////////////
                 // 如果发生事件的是listensock，表示有新的客户端连上来。
@@ -431,6 +455,19 @@ public:
         ev.events = EPOLLIN;
         epoll_ctl(epollfd,EPOLL_CTL_ADD,ev.data.fd,&ev); 
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //把定时器加入epoll。
+        int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK|TFD_CLOEXEC);   // 创建timerfd。
+        struct itimerspec timeout;                                // 定时时间的数据结构。
+        memset(&timeout,0,sizeof(struct itimerspec));
+        timeout.it_value.tv_sec = 30;                            // 定时时间为30秒。
+        timeout.it_value.tv_nsec = 0;
+        timerfd_settime(tfd,0,&timeout,0);                  // 开始计时。alarm(30)
+        ev.data.fd=tfd;                                                  // 为定时器准备事件。
+        ev.events=EPOLLIN;
+        epoll_ctl(epollfd,EPOLL_CTL_ADD,tfd,&ev);     // 把定时器fd加入epoll。
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         struct epoll_event evs[10];      // 存放epoll返回的事件。
 
         while (true)     // 事件循环。
@@ -445,6 +482,16 @@ public:
             for (int i=0;i<infds;i++)
             {
                 logfile.write("发送线程：已发生事件的fd=%d(%d)\n",evs[i].data.fd,evs[i].events);
+
+                ////////////////////////////////////////////////////////
+                // 如果定时器的时间已到，更新进程的心跳；
+                if (evs[i].data.fd==tfd)
+                {
+                    timerfd_settime(tfd,0,&timeout,0);       // 重新开始计时。
+                    pactive.uptatime();        // 更新进程心跳。
+                    continue;
+                }
+                ////////////////////////////////////////////////////////
 
                 ////////////////////////////////////////////////////////
                 // 如果发生事件的是管道，表示发送队列中有报文需要发送。
@@ -534,15 +581,16 @@ public:
 
 int main(int argc,char *argv[])
 {
-    if (argc != 3)
+    if (argc != 4)
     {
         printf("\n");
-        printf("Using :./webserver logfile port\n\n");
-        printf("Sample:./webserver /log/idc/webserver.log 8080\n\n");
-        printf("        /project/tools/bin/procctl 5 /project/tools/bin/webserver /log/idc/webserver.log 8080\n\n");
+        printf("Using :./webserver logfile port timaout\n\n");
+        printf("Sample:./webserver /log/idc/webserver.log 8080 60\n\n");
+        printf("        /project/tools/bin/procctl 5 /project/tools/bin/webserver /log/idc/webserver.log 8080 60\n\n");
         printf("基于HTTP协议的数据访问接口模块。\n");
         printf("logfile 本程序运行的日是志文件。\n");
         printf("port    服务端口，例如：80、8080。\n");
+        printf("timeout 本程序的超时时间，单位：秒,大于30.\n");
         printf("访问示例：http://192.168.182.124:8080?username=wucz&passwd=wuczpwd&intername=getzhobtmind3&obtid=59287&begintime=20241024094318&endtime=20251024113920\n");
 
         return -1;
@@ -558,6 +606,8 @@ int main(int argc,char *argv[])
     {
         printf("打开日志文件失败（%s）。\n",argv[1]); return -1;
     }
+
+    pactive.addpinfo(atoi(argv[3]),"webserver");
 
     thread rt(&WebServer::recvfunc, &webserver,atoi(argv[2]));          // 创建接收线程。
 
