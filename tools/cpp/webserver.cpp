@@ -5,6 +5,16 @@ using namespace idc;
 
 #define THREAD_CNT 20
 
+// 程序运行参数的结构体。
+struct st_arg
+{
+    int  port;                   // 服务器端口
+    char connstr[101];          // 数据库的连接参数。
+    char charset[51];            // 数据库的字符集。
+    int  timeout;                   // 本程序运行时的超时时间。
+    char pname[51];            // 本程序运行时的程序名。
+} starg;
+
 // 客户端的结构体。
 struct st_client
 {
@@ -28,6 +38,8 @@ struct st_recvmesg
 
 // 进程退出函数。
 void EXIT(int sig);
+// 解析xml参数存到starg中。
+bool _xmltoarg(const char *strxmlbuffer);
 // 初始化服务端的监听端口。
 int initserver(const int port);
 // 从GET请求中获取参数的值：strget-GET请求报文的内容；name-参数名；value-参数值。
@@ -221,9 +233,9 @@ public:
     {
         connection conn;
 
-        if (conn.connecttodb("idc/idcpwd@snorcl11g_124","Simplified Chinese_China.AL32UTF8")!=0)
+        if (conn.connecttodb(starg.connstr,starg.charset)!=0)
         {
-            logfile.write("connect database(idc/idcpwd@snorcl11g_124) failed.\n%s\n",conn.message());
+            logfile.write("connect database(%s) failed.\n%s\n",starg.connstr,conn.message());
             return;
         }
 
@@ -582,17 +594,25 @@ public:
 
 int main(int argc,char *argv[])
 {
-    if (argc != 4)
+    if (argc != 3)
     {
         printf("\n");
-        printf("Using :./webserver logfile port timaout\n\n");
-        printf("Sample:./webserver /log/idc/webserver.log 8080 60\n\n");
-        printf("        /project/tools/bin/procctl 5 /project/tools/bin/webserver /log/idc/webserver.log 8080 60\n\n");
+        printf("Using :./webserver logfile xmlbuffer\n\n");
+
+        printf("Sample:/project/tools/bin/procctl 5 /project/tools/bin/webserver /log/idc/webserver.log "\
+                "\"<port>8080</port><connstr>idc/idcpwd@snorcl11g_124</connstr><charset>Simplified Chinese_China.AL32UTF8</charset>"\
+                "<timeout>50</timeout><pname>webserver</pname>\"\n\n");
         printf("基于HTTP协议的数据访问接口模块。\n");
         printf("logfile 本程序运行的日是志文件。\n");
-        printf("port    服务端口，例如：80、8080。\n");
-        printf("timeout 本程序的超时时间，单位：秒,大于30.\n");
-        printf("访问示例：http://192.168.182.124:8080?username=wucz&passwd=wuczpwd&intername=getzhobtmind3&obtid=59287&begintime=20241024094318&endtime=20251024113920\n");
+        printf("xmlbuffer     本程序运行的参数，用xml表示，具体如下：\n\n");
+
+        printf("port        服务端口，例如：80、8080。\n");
+        printf("connstr     数据库的连接参数，格式：username/passwd@tnsname。\n");
+        printf("charset     数据库的字符集，这个参数要与数据源数据库保持一致，否则会出现中文乱码的情况。\n");
+        printf("timeout     本程序的超时时间，单位：秒，大于30.\n");
+        printf("pname       进程名，尽可能采用易懂的、与其它进程不同的名称，方便故障排查。\n\n");
+
+        printf("访问示例：http://192.168.182.124:8080?username=wucz&passwd=wuczpwd&intername=getzhobtmind3&obtid=59287&begintime=20241024094318&endtime=20251024113920\n\n");
 
         return -1;
     }
@@ -608,9 +628,12 @@ int main(int argc,char *argv[])
         printf("打开日志文件失败（%s）。\n",argv[1]); return -1;
     }
 
-    pactive.addpinfo(atoi(argv[3]),"webserver");
+    // 把xml解析到参数starg结构中
+    if (_xmltoarg(argv[2])==false) return -1;
 
-    thread rt(&WebServer::recvfunc, &webserver,atoi(argv[2]));          // 创建接收线程。
+    pactive.addpinfo(starg.timeout,"webserver");
+
+    thread rt(&WebServer::recvfunc, &webserver,starg.port);          // 创建接收线程。
 
     // 创建工作线程
     for(int i=0;i<THREAD_CNT;i++)
@@ -639,6 +662,28 @@ void EXIT(int sig)
     sleep(1);    // 让线程们有足够的时间退出。
 
     exit(0);
+}
+
+bool _xmltoarg(const char *strxmlbuffer)
+{
+    memset(&starg,0,sizeof(struct st_arg));
+
+    getxmlbuffer(strxmlbuffer,"port",starg.port);
+    if (starg.port==0) { logfile.write("port is null.\n"); return false; }
+
+    getxmlbuffer(strxmlbuffer,"connstr",starg.connstr,100);
+    if (strlen(starg.connstr)==0) { logfile.write("connstr is null.\n"); return false; }
+
+    getxmlbuffer(strxmlbuffer,"charset",starg.charset,50);
+    if (strlen(starg.charset)==0) { logfile.write("charset is null.\n"); return false; }
+
+    getxmlbuffer(strxmlbuffer,"timeout",starg.timeout);
+    if (starg.timeout==0) { logfile.write("timeout is null.\n"); return false; }
+
+    getxmlbuffer(strxmlbuffer,"pname",starg.pname,50);
+    if (strlen(starg.pname)==0) { logfile.write("pname is null.\n"); return false; }
+
+    return true;
 }
 
 int initserver(const int port)
